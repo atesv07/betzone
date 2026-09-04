@@ -8,7 +8,7 @@ const LEAGUE_IDS = {
   3:   { name: 'Avrupa Ligi',    flag: '🌟', ch: 'beIN Sports' }
 };
 
-const CURRENT_SEASON = 2026;
+const CURRENT_SEASON = 2025;
 
 async function apiFetch(path, apiKey) {
   const response = await fetch(
