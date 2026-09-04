@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetZone</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0F14;--card:#161920;--card2:#1E2229;--border:rgba(255,255,255,0.07);
+  --text:#F0F2F5;--muted:#6B7280;--accent:#00E676;--gold:#FFD700;
+  --win:#00E676;--lose:#FF4757;--info:#3D8EFF;--warn:#FF6B35;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s,visibility .4s}
+#login-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.lbox{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:360px;animation:sup .4s ease}
+@keyframes sup{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.llogo{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:3px;color:var(--accent);text-align:center;margin-bottom:4px}
+.llogo span{color:var(--text)}
+.lsub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:28px}
+.lf{margin-bottom:14px}
+.ll{font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.li{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.li:focus{border-color:rgba(0,230,118,.4)}
+.lbtn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:6px;transition:all .2s}
+.lbtn:hover{background:#00c85a;transform:translateY(-1px)}
+.lerr{color:var(--lose);font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+
+/* APP */
+#app{display:none}
+#app.v{display:block}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50}
+.logo{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:2px;color:var(--accent)}
+.logo span{color:var(--text)}
+.hright{display:flex;align-items:center;gap:9px}
+.cpill{display:flex;align-items:center;gap:5px;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 11px}
+.cpill span{color:var(--gold);font-weight:500;font-size:13px}
+.upill{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 11px}
+.av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#3D8EFF,#7B2FF7);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500}
+.abadge{font-size:9px;background:rgba(255,215,0,.15);color:var(--gold);border:1px solid rgba(255,215,0,.3);border-radius:4px;padding:1px 5px}
+.obtn{font-size:11px;color:var(--muted);cursor:pointer;padding:4px 8px;border:1px solid var(--border);border-radius:5px;background:none;font-family:inherit;transition:all .15s}
+.obtn:hover{border-color:var(--lose);color:var(--lose)}
+
+/* PAGE TABS */
+.ptabs{display:flex;padding:0 20px;border-bottom:1px solid var(--border);background:var(--bg)}
+.pt{padding:10px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.pt.a{color:var(--accent);border-bottom-color:var(--accent)}
+.pt:hover:not(.a){color:var(--text)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 270px;min-height:calc(100vh - 97px)}
+.main{padding:16px 20px;overflow-y:auto}
+.rpanel{border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg)}
+
+/* LEAGUE BAR */
+.lbar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.lb{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s}
+.lb.a,.lb:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,230,118,.07)}
+
+/* MATCH CARD */
+.mc{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:border-color .2s;cursor:pointer}
+.mc:hover{border-color:rgba(255,255,255,.14)}
+.mc.exp{border-color:rgba(0,230,118,.3)}
+.mch{padding:11px 14px;display:flex;align-items:center;justify-content:space-between}
+.mcl{flex:1}
+.mcleague{font-size:10px;color:var(--muted);margin-bottom:3px}
+.mcteams{font-size:13px;font-weight:500}
+.mcteams .vs{color:var(--muted);font-weight:400;font-size:11px;margin:0 5px}
+.mcr{display:flex;align-items:center;gap:7px}
+.tbadge{font-size:11px;padding:3px 8px;border-radius:5px;font-weight:500}
+.tb-u{background:var(--card2);color:var(--muted);border:1px solid var(--border)}
+.tb-l{background:rgba(255,107,53,.15);color:var(--warn);border:1px solid rgba(255,107,53,.3)}
+.tb-f{background:rgba(107,114,128,.15);color:var(--muted);border:1px solid var(--border)}
+.score{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:2px;color:var(--text);line-height:1}
+.score.live-s{color:var(--warn)}
+.vs-txt{font-size:14px;color:var(--muted)}
+.arr{font-size:10px;color:var(--muted);transition:transform .35s ease;line-height:1}
+.mc.exp .arr{transform:rotate(180deg)}
+
+/* Quick 1X2 row */
+.qodds{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:0 14px 11px}
+.qo{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 4px;text-align:center;cursor:pointer;transition:all .15s;font-family:inherit;color:var(--text)}
+.qo:hover{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.05)}
+.qo.s{border-color:var(--accent);background:rgba(0,230,118,.1)}
+.qol{font-size:11px;color:var(--muted);margin-bottom:3px}
+.qov{font-size:15px;font-weight:500;color:var(--accent)}
+
+/* card open glow sweep */
+@keyframes glowSweep{
+  0%{box-shadow:0 0 0 0 rgba(0,230,118,0)}
+  30%{box-shadow:0 0 0 3px rgba(0,230,118,0.18)}
+  100%{box-shadow:0 0 0 0 rgba(0,230,118,0)}
+}
+.mc.exp{animation:glowSweep .7s ease forwards}
+.mkts{
+  height:0;overflow:hidden;
+  transition:height .55s cubic-bezier(0.16,1,0.3,1);
+  will-change:height;
+}
+.mkts-inner{
+  padding:4px 14px 14px;
+  border-top:1px solid var(--border);
+  opacity:0;
+  transform:translateY(-8px);
+  transition:opacity .4s ease .1s, transform .4s ease .1s;
+}
+.mkts.o .mkts-inner{opacity:1;transform:translateY(0)}
+
+/* staggered odd buttons */
+.ob{
+  background:var(--card2);border:1px solid var(--border);border-radius:7px;
+  padding:8px 7px;text-align:left;cursor:pointer;
+  font-family:inherit;color:var(--text);
+  opacity:0;transform:translateY(6px) scale(0.97);
+  transition:opacity .28s ease, transform .28s ease, background .15s, border-color .15s;
+}
+.mkts.o .ob{opacity:1;transform:translateY(0) scale(1)}
+.ob:hover{background:rgba(0,230,118,.06);border-color:rgba(0,230,118,.28)}
+.ob.s{background:rgba(0,230,118,.1);border-color:var(--accent)}
+.mkts-inner{padding:6px 14px 16px;border-top:1px solid var(--border)}
+.msec{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.msec:first-child{margin-top:10px;padding-top:0;border-top:none}
+.mstitle{
+  font-size:11px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:9px;
+  display:flex;align-items:center;gap:6px;
+  font-weight:500;
+}
+.ndot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.og{display:grid;gap:7px}
+.og3{grid-template-columns:1fr 1fr 1fr}
+.og2{grid-template-columns:1fr 1fr}
+.ogf{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+
+/* Odd button — centered, readable */
+.ob{
+  background:var(--card2);border:1px solid var(--border);border-radius:9px;
+  padding:11px 8px 10px;
+  text-align:center;
+  cursor:pointer;
+  font-family:inherit;color:var(--text);
+  opacity:0;transform:translateY(6px) scale(0.97);
+  transition:opacity .28s ease, transform .28s ease, background .15s, border-color .15s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.mkts.o .ob{opacity:1;transform:translateY(0) scale(1)}
+.ob:hover{background:rgba(0,230,118,.07);border-color:rgba(0,230,118,.3)}
+.ob.s{background:rgba(0,230,118,.11);border-color:var(--accent)}
+.obl{
+  font-size:12px;color:var(--muted);
+  line-height:1.3;text-align:center;
+  font-weight:400;
+}
+.obv{font-size:16px;font-weight:500;color:var(--text);line-height:1}
+.ob.s .obv{color:var(--accent)}
+.ob.s .obl{color:rgba(0,230,118,.7)}
+.obv.p{color:var(--warn)}
+
+/* RIGHT PANEL */
+.rptabs{display:flex;border-bottom:1px solid var(--border)}
+.rpt{flex:1;padding:10px 4px;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.rpt.a{color:var(--accent);border-bottom-color:var(--accent)}
+.rpbody{flex:1;overflow-y:auto;padding:12px 13px}
+
+/* SLIP */
+.si{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.sim{font-size:10px;color:var(--muted);margin-bottom:2px}
+.sis{font-size:12px;font-weight:500;margin-bottom:5px;line-height:1.4}
+.sir{display:flex;justify-content:space-between;align-items:center}
+.sio{color:var(--accent);font-weight:500;font-size:14px}
+.del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;padding:0 2px;font-family:inherit;line-height:1}
+.del:hover{color:var(--lose)}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px;margin-top:4px}
+.sr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sl{font-size:12px;color:var(--muted)}
+.sv{font-size:13px;font-weight:500;color:var(--accent)}
+.qrow{display:flex;gap:4px;margin-bottom:9px}
+.qb{flex:1;padding:5px 2px;border:1px solid var(--border);background:var(--card2);border-radius:5px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;text-align:center;transition:all .15s}
+.qb:hover{border-color:var(--accent);color:var(--accent)}
+.iw{display:flex;align-items:center;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:5px 9px}
+.si2{background:none;border:none;outline:none;color:var(--text);font-size:14px;font-weight:500;font-family:inherit;width:70px;text-align:right}
+.pr{display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:9px}
+.pbtn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:9px;color:#000;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:11px;transition:all .2s}
+.pbtn:hover{background:#00c85a;transform:translateY(-1px)}
+.pbtn:active{transform:scale(.98)}
+.empty{text-align:center;color:var(--muted);font-size:12px;padding:28px 8px;line-height:1.9}
+.clrbtn{width:100%;padding:7px;background:none;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;margin-top:6px;transition:all .15s}
+.clrbtn:hover{border-color:var(--lose);color:var(--lose)}
+
+/* COUPON ITEM */
+.ci{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px}
+.cih{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cid{font-size:11px;color:var(--muted)}
+.cis{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.sp{background:rgba(61,142,255,.12);color:var(--info);border:1px solid rgba(61,142,255,.2)}
+.sw{background:rgba(0,230,118,.12);color:var(--win);border:1px solid rgba(0,230,118,.2)}
+.sl2{background:rgba(255,71,87,.12);color:var(--lose);border:1px solid rgba(255,71,87,.2)}
+.cif{display:flex;justify-content:space-between;align-items:center;margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+
+/* PROFILE */
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.prow:last-child{border-bottom:none}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lbox">
+    <div class="llogo">BET<span>ZONE</span></div>
+    <div class="lsub">Hesabınıza giriş yapın</div>
+    <div class="lf"><div class="ll">Kullanıcı Adı</div><input class="li" id="liu" type="text" placeholder="username" autocomplete="off"></div>
+    <div class="lf"><div class="ll">Şifre</div><input class="li" id="lip" type="password" placeholder="••••••••"></div>
+    <button class="lbtn" onclick="doLogin()">Giriş Yap</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="hdr">
+    <div class="logo">BET<span>ZONE</span></div>
+    <div class="hright">
+      <div class="cpill"><span style="font-size:11px">₺</span><span id="bdisp">0</span></div>
+      <div class="upill">
+        <div class="av" id="avt">?</div>
+        <span id="udisp" style="font-size:12px;font-weight:500"></span>
+        <span class="abadge" id="abadge" style="display:none">ADMIN</span>
+      </div>
+      <button class="obtn" onclick="doLogout()">Çıkış</button>
+    </div>
+  </div>
+  <div class="ptabs">
+    <div class="pt a" onclick="showPage('matches',this)">⚽ Maçlar</div>
+    <div class="pt" onclick="showPage('coupons',this)">🎟 Kuponlarım</div>
+    <div class="pt" onclick="showPage('profile',this)">👤 Profilim</div>
+  </div>
+
+  <!-- MATCHES PAGE -->
+  <div id="pg-matches">
+    <div class="layout">
+      <main class="main">
+        <div class="lbar" id="lbar">
+          <button class="lb a" onclick="fl('all',this)">Tümü</button>
+          <button class="lb" onclick="fl('Premier Lig',this)">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier Lig</button>
+          <button class="lb" onclick="fl('La Liga',this)">🇪🇸 La Liga</button>
+          <button class="lb" onclick="fl('Serie A',this)">🇮🇹 Serie A</button>
+          <button class="lb" onclick="fl('Bundesliga',this)">🇩🇪 Bundesliga</button>
+          <button class="lb" onclick="fl('Ligue 1',this)">🇫🇷 Ligue 1</button>
+          <button class="lb" onclick="fl('Süper Lig',this)">🇹🇷 Süper Lig</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span id="live-status" style="font-size:11px;color:var(--muted)">Yükleniyor...</span>
+          <button onclick="loadMatches()" style="font-size:11px;padding:3px 10px;border:1px solid var(--border);border-radius:5px;background:var(--card);color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">↻ Yenile</button>
+        </div>
+        <div id="mlist"></div>
+      </main>
+      <aside class="rpanel">
+        <div class="rptabs">
+          <div class="rpt a" onclick="swrp('slip',this)">Kupon <span id="scnt" style="background:var(--accent);color:#000;font-size:9px;font-weight:700;border-radius:8px;padding:1px 6px;margin-left:2px">0</span></div>
+          <div class="rpt" onclick="swrp('hist',this)">Son Kuponlar</div>
+        </div>
+        <div id="rp-slip" class="rpbody">
+          <div id="slist"><div class="empty">Maçlardan bahis seçerek<br>kupon oluşturun</div></div>
+          <div id="ssec" style="display:none">
+            <div class="sbox">
+              <div class="sr"><span class="sl">Toplam Oran</span><span class="sv" id="todd">1.00</span></div>
+              <div class="qrow">
+                <button class="qb" onclick="setS(100)">100</button>
+                <button class="qb" onclick="setS(250)">250</button>
+                <button class="qb" onclick="setS(500)">500</button>
+                <button class="qb" onclick="setS(1000)">1K</button>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="sl">Miktar</span>
+                <div class="iw"><span style="color:var(--gold);font-size:12px">₺</span><input class="si2" type="number" id="sinp" value="200" oninput="calc()"></div>
+              </div>
+              <div class="pr">
+                <span style="font-size:12px;color:var(--muted)">Potansiyel</span>
+                <span style="font-size:14px;font-weight:500;color:var(--win)" id="pval">200</span>
+              </div>
+            </div>
+            <button class="pbtn" onclick="placeBet()">Kuponu Oyna →</button>
+            <button class="clrbtn" onclick="clearSlip()">Kuponu Temizle</button>
+          </div>
+        </div>
+        <div id="rp-hist" class="rpbody" style="display:none"><div id="hlist"><div class="empty">Henüz kupon yok.</div></div></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- COUPONS PAGE -->
+  <div id="pg-coupons" style="display:none;padding:20px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:14px">🎟 Tüm Kuponlarım</div>
+    <div id="cplist"><div class="empty">Henüz kupon oynanmadı.</div></div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div id="pg-profile" style="display:none;padding:20px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:14px">👤 Profilim</div>
+    <div class="pcard">
+      <div class="prow"><span style="color:var(--muted)">Kullanıcı Adı</span><span style="font-weight:500" id="pun"></span></div>
+      <div class="prow"><span style="color:var(--muted)">Rol</span><span style="font-weight:500" id="prl"></span></div>
+      <div class="prow"><span style="color:var(--muted)">Bakiye</span><span style="font-weight:500;color:var(--gold)" id="pbal"></span></div>
+      <div class="prow"><span style="color:var(--muted)">Toplam Kupon</span><span style="font-weight:500" id="ptot">0</span></div>
+      <div class="prow"><span style="color:var(--muted)">Kazanılan</span><span style="font-weight:500;color:var(--win)" id="pwon">0</span></div>
+      <div class="prow"><span style="color:var(--muted)">Üyelik</span><span style="font-weight:500">20 Mart 2026</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USERS={'AtesV':{password:'Ates2707!',role:'admin',balance:12450,initials:'AV'}};
+
+// Durum göstergesi
+function setLiveStatus(txt,color){
+  const el=document.getElementById('live-status');
+  if(el){el.textContent=txt;el.style.color=color||'var(--muted)';}
+}
+
+let _timer=null;
+
+async function loadMatches(){
+  setLiveStatus('⟳ Yükleniyor...','var(--info)');
+
+  const isDeployed = location.hostname !== 'localhost' && !location.hostname.startsWith('127') && location.protocol !== 'file:';
+  if(!isDeployed){
+    if(MATCHES.length===0){STATIC_MATCHES.forEach(m=>MATCHES.push(m));}
+    renderMatches();
+    setLiveStatus('● '+MATCHES.length+' maç (demo mod)','var(--muted)');
+    return;
+  }
+
+  try{
+    const r=await fetch('/matches');
+    const d=await r.json();
+    const list=d.matches||[];
+    MATCHES.length=0;
+    if(list.length===0){
+      STATIC_MATCHES.forEach(m=>MATCHES.push(m));
+      setLiveStatus('⚠ Bu hafta maç yok · Demo gösteriliyor','var(--warn)');
+    } else {
+      list.forEach(m=>MATCHES.push(m));
+      const t=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+      const live=list.filter(m=>m.status==='live').length;
+      setLiveStatus('● '+(live?live+' canlı · ':'')+list.length+' maç · '+t,'var(--accent)');
+    }
+    renderMatches();
+    settleCoupons(); // maçlar güncellendi, kuponları kontrol et
+  }catch(e){
+    if(MATCHES.length===0){STATIC_MATCHES.forEach(m=>MATCHES.push(m));renderMatches();}
+    setLiveStatus('⚠ Bağlantı hatası · Demo gösteriliyor','var(--warn)');
+  }
+}
+
+function startLiveRefresh(){loadMatches();_timer=setInterval(loadMatches,5*60*1000);}
+function stopLiveRefresh(){clearInterval(_timer);}
+
+// Statik maçlar
+const STATIC_MATCHES=[
+  {id:'m1',league:'Premier Lig',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',ch:'beIN Sports 3',
+   home:'Bournemouth',away:'Man. United',date:'20.03.2026',time:'23:00',status:'upcoming',
+   odd1:3.30,oddX:3.90,odd2:2.12,
+   markets:{
+    'Çifte Şans':[{id:'cs1X',l:'1/X · Bou. veya Ber.',v:2.10},{id:'cs12',l:'1/2 · Beraberlik Yok',v:1.38},{id:'csX2',l:'X/2 · MU veya Ber.',v:1.55}],
+    'Alt / Üst':[{id:'a15a',l:'1.5 Alt',v:2.05},{id:'a15u',l:'1.5 Üst',v:1.72},{id:'a25a',l:'2.5 Alt',v:2.50},{id:'a25u',l:'2.5 Üst',v:1.56,p:1},{id:'a35a',l:'3.5 Alt',v:1.62},{id:'a35u',l:'3.5 Üst',v:2.30},{id:'a45a',l:'4.5 Alt',v:1.25},{id:'a45u',l:'4.5 Üst',v:3.80}],
+    'Karşılıklı Gol':[{id:'kgv',l:'KG Var',v:1.70,p:1},{id:'kgy',l:'KG Yok',v:2.10}],
+    'İlk Yarı':[{id:'iy1',l:'İY: Bournemouth',v:4.80},{id:'iy0',l:'İY: Beraberlik',v:2.10,p:1},{id:'iy2',l:'İY: Man. United',v:3.20}],
+    'İY / MS':[{id:'i11',l:'1/1',v:9.80},{id:'i10',l:'1/X',v:14.50},{id:'i12',l:'1/2',v:19.00},{id:'i01',l:'X/1',v:8.20},{id:'i00',l:'X/X',v:6.80},{id:'i02',l:'X/2',v:5.20,p:1},{id:'i21',l:'2/1',v:24.00},{id:'i20',l:'2/X',v:18.00},{id:'i22',l:'2/2',v:4.10}],
+    'Handikap':[{id:'h1a',l:'Bou.(+1) Kazanır',v:2.20},{id:'h1b',l:'(+1) Beraberlik',v:4.20},{id:'h1c',l:'MU(-1) Kazanır',v:2.85},{id:'h2a',l:'Bou.(+2) Kazanır',v:1.55},{id:'h2b',l:'(+2) Beraberlik',v:5.50},{id:'h2c',l:'MU(-2) Kazanır',v:4.80}],
+    'MS + Alt/Üst':[{id:'m1u',l:'Bou. & Üst 2.5',v:6.20},{id:'m0u',l:'Ber. & Üst 2.5',v:6.90},{id:'m2u',l:'MU & Üst 2.5',v:3.60,p:1},{id:'m1a',l:'Bou. & Alt 2.5',v:9.50},{id:'m0a',l:'Ber. & Alt 2.5',v:11.00},{id:'m2a',l:'MU & Alt 2.5',v:4.50}],
+    'MS + KG':[{id:'mk1v',l:'Bou. & KG Var',v:5.80},{id:'mk0v',l:'Ber. & KG Var',v:6.50},{id:'mk2v',l:'MU & KG Var',v:3.40,p:1},{id:'mk1y',l:'Bou. & KG Yok',v:7.20},{id:'mk0y',l:'Ber. & KG Yok',v:9.00},{id:'mk2y',l:'MU & KG Yok',v:3.20}],
+    'İlk Gol':[{id:'ig1',l:'Bournemouth',v:3.80},{id:'ig2',l:'Man. United',v:2.30,p:1},{id:'ig0',l:'Gol Olmaz',v:16.00}],
+    'Kesin Skor':[{id:'s00',l:'0-0',v:14.00},{id:'s10',l:'1-0',v:11.00},{id:'s01',l:'0-1',v:8.50},{id:'s11',l:'1-1',v:7.00},{id:'s20',l:'2-0',v:16.00},{id:'s02',l:'0-2',v:12.00},{id:'s21',l:'2-1',v:10.00},{id:'s12',l:'1-2',v:7.50},{id:'s22',l:'2-2',v:12.00}],
+    'Toplam Gol (Kesin)':[{id:'tg0',l:'0 Gol',v:12.00},{id:'tg1',l:'1 Gol',v:7.50},{id:'tg2',l:'2 Gol',v:4.80},{id:'tg3',l:'3 Gol',v:4.20,p:1},{id:'tg4',l:'4 Gol',v:6.00},{id:'tg5',l:'5+ Gol',v:8.50}],
+    'İY Alt/Üst':[{id:'iy05a',l:'İY 0.5 Alt',v:2.80},{id:'iy05u',l:'İY 0.5 Üst',v:1.42},{id:'iy15a',l:'İY 1.5 Alt',v:1.55},{id:'iy15u',l:'İY 1.5 Üst',v:2.35}],
+    'İY KG':[{id:'iykv',l:'İY KG Var',v:3.80},{id:'iyky',l:'İY KG Yok',v:1.27}],
+   }
+  },
+  {id:'m2',league:'Serie A',flag:'🇮🇹',ch:'S Sport Plus',
+   home:'Cagliari',away:'Napoli',date:'20.03.2026',time:'20:30',status:'upcoming',
+   odd1:4.22,oddX:3.40,odd2:1.96,
+   markets:{
+    'Çifte Şans':[{id:'cs1X',l:'1/X',v:2.70},{id:'cs12',l:'1/2 Ber. Yok',v:1.28},{id:'csX2',l:'X/2',v:1.38}],
+    'Alt / Üst':[{id:'a15a',l:'1.5 Alt',v:2.20},{id:'a15u',l:'1.5 Üst',v:1.65},{id:'a25a',l:'2.5 Alt',v:2.44,p:1},{id:'a25u',l:'2.5 Üst',v:1.52},{id:'a35a',l:'3.5 Alt',v:1.60},{id:'a35u',l:'3.5 Üst',v:2.25}],
+    'Karşılıklı Gol':[{id:'kgv',l:'KG Var',v:1.85},{id:'kgy',l:'KG Yok',v:1.90}],
+    'İlk Yarı':[{id:'iy1',l:'İY: Cagliari',v:6.50},{id:'iy0',l:'İY: Beraberlik',v:2.10},{id:'iy2',l:'İY: Napoli',v:2.80,p:1}],
+    'Handikap':[{id:'h1a',l:'Cag.(+1)',v:2.40},{id:'h1b',l:'(+1) Ber.',v:4.00},{id:'h1c',l:'Nap.(-1)',v:2.50}],
+    'MS + Alt/Üst':[{id:'m1u',l:'Cag. & Üst 2.5',v:9.50},{id:'m0u',l:'Ber. & Üst 2.5',v:7.20},{id:'m2u',l:'Nap. & Üst 2.5',v:3.20,p:1},{id:'m1a',l:'Cag. & Alt 2.5',v:14.00},{id:'m0a',l:'Ber. & Alt 2.5',v:9.50},{id:'m2a',l:'Nap. & Alt 2.5',v:3.80}],
+    'İlk Gol':[{id:'ig1',l:'Cagliari',v:5.20},{id:'ig2',l:'Napoli',v:1.90,p:1},{id:'ig0',l:'Gol Olmaz',v:18.00}],
+    'Kesin Skor':[{id:'s00',l:'0-0',v:16.00},{id:'s10',l:'1-0',v:20.00},{id:'s01',l:'0-1',v:7.50},{id:'s11',l:'1-1',v:8.50},{id:'s21',l:'2-1',v:18.00},{id:'s12',l:'1-2',v:7.00},{id:'s02',l:'0-2',v:9.00},{id:'s22',l:'2-2',v:14.00}],
+   }
+  },
+  {id:'m3',league:'Serie A',flag:'🇮🇹',ch:'S Sport Plus',
+   home:'Genoa',away:'Udinese',date:'20.03.2026',time:'22:45',status:'upcoming',
+   odd1:1.34,oddX:4.80,odd2:8.50,
+   markets:{
+    'Çifte Şans':[{id:'cs1X',l:'1/X',v:1.15},{id:'cs12',l:'1/2 Ber. Yok',v:1.10},{id:'csX2',l:'X/2',v:2.30}],
+    'Alt / Üst':[{id:'a15a',l:'1.5 Alt',v:2.10},{id:'a15u',l:'1.5 Üst',v:1.70},{id:'a25a',l:'2.5 Alt',v:1.90},{id:'a25u',l:'2.5 Üst',v:1.85,p:1},{id:'a35a',l:'3.5 Alt',v:1.60},{id:'a35u',l:'3.5 Üst',v:2.25}],
+    'Karşılıklı Gol':[{id:'kgv',l:'KG Var',v:2.10},{id:'kgy',l:'KG Yok',v:1.70,p:1}],
+    'Handikap':[{id:'h1a',l:'Gen.(-1)',v:1.90},{id:'h1b',l:'(-1) Ber.',v:5.00},{id:'h1c',l:'Udi.(+1)',v:3.50}],
+    'MS + Alt/Üst':[{id:'m1u',l:'Gen. & Üst 2.5',v:2.50,p:1},{id:'m0u',l:'Ber. & Üst 2.5',v:9.00},{id:'m2u',l:'Udi. & Üst 2.5',v:16.00},{id:'m1a',l:'Gen. & Alt 2.5',v:2.80},{id:'m0a',l:'Ber. & Alt 2.5',v:18.00},{id:'m2a',l:'Udi. & Alt 2.5',v:18.00}],
+    'İlk Gol':[{id:'ig1',l:'Genoa',v:1.50,p:1},{id:'ig2',l:'Udinese',v:5.50},{id:'ig0',l:'Gol Olmaz',v:20.00}],
+   }
+  },
+  {id:'m4',league:'La Liga',flag:'🇪🇸',ch:'S Sport',
+   home:'Villarreal',away:'Real Sociedad',date:'20.03.2026',time:'23:00',status:'upcoming',
+   odd1:2.76,oddX:3.25,odd2:2.60,
+   markets:{
+    'Çifte Şans':[{id:'cs1X',l:'1/X',v:1.60},{id:'cs12',l:'1/2 Ber. Yok',v:1.35},{id:'csX2',l:'X/2',v:1.55}],
+    'Alt / Üst':[{id:'a15a',l:'1.5 Alt',v:1.90},{id:'a15u',l:'1.5 Üst',v:1.80},{id:'a25a',l:'2.5 Alt',v:2.10},{id:'a25u',l:'2.5 Üst',v:1.70,p:1},{id:'a35a',l:'3.5 Alt',v:1.65},{id:'a35u',l:'3.5 Üst',v:2.20}],
+    'Karşılıklı Gol':[{id:'kgv',l:'KG Var',v:1.90},{id:'kgy',l:'KG Yok',v:1.85}],
+    'İlk Yarı':[{id:'iy1',l:'İY: Villarreal',v:3.80},{id:'iy0',l:'İY: Beraberlik',v:2.20},{id:'iy2',l:'İY: Sociedad',v:4.20}],
+    'İY / MS':[{id:'i11',l:'1/1',v:8.00},{id:'i10',l:'1/X',v:12.00},{id:'i12',l:'1/2',v:16.00},{id:'i01',l:'X/1',v:9.00},{id:'i00',l:'X/X',v:7.50},{id:'i02',l:'X/2',v:6.00},{id:'i21',l:'2/1',v:20.00},{id:'i20',l:'2/X',v:15.00},{id:'i22',l:'2/2',v:5.80}],
+    'Handikap':[{id:'h1a',l:'Vil.(+1)',v:1.60},{id:'h1b',l:'(+1) Ber.',v:4.50},{id:'h1c',l:'Soc.(-1)',v:3.80}],
+    'MS + KG':[{id:'mk1v',l:'Vil. & KG Var',v:4.80},{id:'mk0v',l:'Ber. & KG Var',v:5.50},{id:'mk2v',l:'Soc. & KG Var',v:4.50,p:1},{id:'mk1y',l:'Vil. & KG Yok',v:6.00},{id:'mk0y',l:'Ber. & KG Yok',v:8.00},{id:'mk2y',l:'Soc. & KG Yok',v:5.20}],
+    'İlk Gol':[{id:'ig1',l:'Villarreal',v:2.80},{id:'ig2',l:'Real Sociedad',v:2.90,p:1},{id:'ig0',l:'Gol Olmaz',v:16.00}],
+   }
+  },
+  {id:'m5',league:'Bundesliga',flag:'🇩🇪',ch:'S Sport Plus',
+   home:'RB Leipzig',away:'Hoffenheim',date:'20.03.2026',time:'22:30',status:'upcoming',
+   odd1:2.25,oddX:3.25,odd2:3.79,
+   markets:{
+    'Çifte Şans':[{id:'cs1X',l:'1/X',v:1.40},{id:'cs12',l:'1/2 Ber. Yok',v:1.35},{id:'csX2',l:'X/2',v:1.90}],
+    'Alt / Üst':[{id:'a25a',l:'2.5 Alt',v:2.30},{id:'a25u',l:'2.5 Üst',v:1.60,p:1},{id:'a35a',l:'3.5 Alt',v:1.60},{id:'a35u',l:'3.5 Üst',v:2.30},{id:'a45a',l:'4.5 Alt',v:1.30},{id:'a45u',l:'4.5 Üst',v:3.50}],
+    'Karşılıklı Gol':[{id:'kgv',l:'KG Var',v:1.55,p:1},{id:'kgy',l:'KG Yok',v:2.40}],
+    'İlk Yarı':[{id:'iy1',l:'İY: Leipzig',v:3.20},{id:'iy0',l:'İY: Beraberlik',v:2.10},{id:'iy2',l:'İY: Hoffenheim',v:5.00}],
+    'İY / MS':[{id:'i11',l:'1/1',v:6.50},{id:'i10',l:'1/X',v:10.00},{id:'i12',l:'1/2',v:14.00},{id:'i01',l:'X/1',v:9.00},{id:'i00',l:'X/X',v:7.20},{id:'i02',l:'X/2',v:9.50},{id:'i21',l:'2/1',v:22.00},{id:'i20',l:'2/X',v:18.00},{id:'i22',l:'2/2',v:7.80}],
+    'Handikap':[{id:'h1a',l:'Lei.(-1)',v:2.60},{id:'h1b',l:'(-1) Ber.',v:4.80},{id:'h1c',l:'Hof.(+1)',v:2.10}],
+    'MS + Alt/Üst':[{id:'m1u',l:'Lei. & Üst 2.5',v:3.80,p:1},{id:'m0u',l:'Ber. & Üst 2.5',v:5.80},{id:'m2u',l:'Hof. & Üst 2.5',v:7.50},{id:'m1a',l:'Lei. & Alt 2.5',v:5.50},{id:'m0a',l:'Ber. & Alt 2.5',v:10.00},{id:'m2a',l:'Hof. & Alt 2.5',v:11.00}],
+    'İlk Gol':[{id:'ig1',l:'RB Leipzig',v:1.95,p:1},{id:'ig2',l:'Hoffenheim',v:3.60},{id:'ig0',l:'Gol Olmaz',v:17.00}],
+    'Kesin Skor':[{id:'s10',l:'1-0',v:9.00},{id:'s20',l:'2-0',v:8.50},{id:'s21',l:'2-1',v:8.00,p:1},{id:'s11',l:'1-1',v:7.50},{id:'s12',l:'1-2',v:11.00},{id:'s22',l:'2-2',v:10.00},{id:'s30',l:'3-0',v:12.00},{id:'s31',l:'3-1',v:9.50}],
+   }
+  },
+  {id:'m6',league:'Ligue 1',flag:'🇫🇷',ch:'beIN Sports 4',
+   home:'Lens',away:'Angers',date:'20.03.2026',time:'22:45',status:'upcoming',
+   odd1:3.29,oddX:3.91,odd2:2.20,
+   markets:{
+    'Çifte Şans':[{id:'cs1X',l:'1/X',v:1.65},{id:'cs12',l:'1/2 Ber. Yok',v:1.30},{id:'csX2',l:'X/2',v:1.40}],
+    'Alt / Üst':[{id:'a25a',l:'2.5 Alt',v:2.05},{id:'a25u',l:'2.5 Üst',v:1.75,p:1},{id:'a35a',l:'3.5 Alt',v:1.55},{id:'a35u',l:'3.5 Üst',v:2.45}],
+    'Karşılıklı Gol':[{id:'kgv',l:'KG Var',v:1.80},{id:'kgy',l:'KG Yok',v:2.00}],
+    'İlk Yarı':[{id:'iy1',l:'İY: Lens',v:4.20},{id:'iy0',l:'İY: Beraberlik',v:2.00},{id:'iy2',l:'İY: Angers',v:5.00}],
+    'Handikap':[{id:'h1a',l:'Len.(+1)',v:1.60},{id:'h1b',l:'(+1) Ber.',v:4.20},{id:'h1c',l:'Ang.(-1)',v:3.80}],
+    'MS + Alt/Üst':[{id:'m1u',l:'Lens & Üst 2.5',v:6.50},{id:'m0u',l:'Ber. & Üst 2.5',v:7.50},{id:'m2u',l:'Ang. & Üst 2.5',v:4.20,p:1},{id:'m1a',l:'Lens & Alt 2.5',v:8.00},{id:'m0a',l:'Ber. & Alt 2.5',v:11.00},{id:'m2a',l:'Ang. & Alt 2.5',v:5.50}],
+    'İlk Gol':[{id:'ig1',l:'Lens',v:3.50},{id:'ig2',l:'Angers',v:2.50,p:1},{id:'ig0',l:'Gol Olmaz',v:18.00}],
+   }
+  },
+];
+
+// Dinamik MATCHES — başlangıçta boş, fetchLiveMatches doldurur
+const MATCHES=[];
+
+// STATE
+let CU=null, slip={}, expM=null, curL='all';
+
+function gs(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+// LOGIN
+document.getElementById('lip').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('liu').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function doLogin(){
+  const u=document.getElementById('liu').value.trim();
+  const p=document.getElementById('lip').value;
+  const e=document.getElementById('lerr');
+  if(USERS[u]&&USERS[u].password===p){
+    CU={username:u,...USERS[u],balance:gs('bal_'+u,USERS[u].balance)};
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('v');
+    document.getElementById('udisp').textContent=u;
+    document.getElementById('avt').textContent=USERS[u].initials;
+    document.getElementById('bdisp').textContent=CU.balance.toLocaleString('tr-TR');
+    if(USERS[u].role==='admin')document.getElementById('abadge').style.display='inline';
+    e.textContent='';
+    startLiveRefresh();
+    renderHistory();updProf();
+  }else{e.textContent='Kullanıcı adı veya şifre hatalı.';document.getElementById('lip').value='';}
+}
+
+function doLogout(){
+  if(CU)ss('bal_'+CU.username,CU.balance);
+  stopLiveRefresh();
+  CU=null;slip={};expM=null;MATCHES.length=0;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').classList.remove('v');
+  document.getElementById('liu').value='';document.getElementById('lip').value='';
+  document.getElementById('abadge').style.display='none';
+}
+
+// PAGES
+function showPage(p,t){
+  document.querySelectorAll('.pt').forEach(x=>x.classList.remove('a'));t.classList.add('a');
+  ['matches','coupons','profile'].forEach(n=>{document.getElementById('pg-'+n).style.display=p===n?'':'none';});
+  if(p==='coupons')rendCoupPage();
+  if(p==='profile')updProf();
+}
+
+function swrp(t,el){
+  document.querySelectorAll('.rpt').forEach(x=>x.classList.remove('a'));el.classList.add('a');
+  document.getElementById('rp-slip').style.display=t==='slip'?'':'none';
+  document.getElementById('rp-hist').style.display=t==='hist'?'':'none';
+  if(t==='hist')renderHistory();
+}
+
+// FILTER
+function fl(l,btn){
+  curL=l;
+  document.querySelectorAll('.lb').forEach(b=>b.classList.remove('a'));btn.classList.add('a');
+  expM=null;renderMatches();
+}
+
+// RENDER MATCHES
+function renderMatches(){
+  const list=curL==='all'?MATCHES:MATCHES.filter(m=>m.league===curL);
+  document.getElementById('mlist').innerHTML=list.map(buildCard).join('');
+}
+
+function buildCard(m){
+  const exp=expM===m.id;
+  const s1=slip['1_'+m.id]?'s':'', sX=slip['X_'+m.id]?'s':'', s2=slip['2_'+m.id]?'s':'';
+  const tbCls = m.status==='live' ? 'tb-l' : m.status==='finished' ? 'tb-f' : 'tb-u';
+  const tbTxt = m.status==='live'
+    ? '● '+(m.minute ? m.minute+"'" : 'Canlı')
+    : m.status==='finished' ? 'Bitti' : m.time;
+
+  const scoreDisplay = (m.status==='live'||m.status==='finished') && m.scoreHome!=null
+    ? `<div class="score ${m.status==='live'?'live-s':''}">${m.scoreHome} - ${m.scoreAway}</div>`
+    : `<div class="vs-txt">vs</div>`;
+
+  const subInfo = m.status==='finished' && m.scoreHalf
+    ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">İY: ${m.scoreHalf}</div>`
+    : m.status==='live' && m.minute
+    ? `<div style="font-size:11px;color:var(--warn);margin-top:1px">${m.minute}'</div>`
+    : `<div style="font-size:10px;color:var(--muted);margin-top:2px">${m.date}</div>`;
+
+  const mkHtml=Object.entries(m.markets).map(([name,odds])=>{
+    const n=odds.length;
+    let gc;
+    if(n===2) gc='og2';
+    else if(n===3||n===9||n===6) gc='og3';
+    else gc='ogf';
+    return `<div class="msec">
+      <div class="mstitle"><span class="ndot"></span>${name}</div>
+      <div class="og ${gc}">${odds.map(o=>{
+        const sel=slip[o.id+'_'+m.id]?'s':'';
+        const pc=o.p?'p':'';
+        return `<button class="ob ${sel}" onclick="addBet('${o.id}','${m.id}','${m.home} - ${m.away}','${o.l}',${o.v})">
+          <div class="obl">${o.l}</div><div class="obv ${pc}">${o.v.toFixed(2)}</div></button>`;
+      }).join('')}</div></div>`;
+  }).join('');
+
+  return `<div class="mc${exp?' exp':''}" id="mc-${m.id}">
+    <div class="mch" onclick="toggleM('${m.id}')">
+      <div class="mcl">
+        <div class="mcleague">${m.flag} ${m.league} · ${m.ch}</div>
+        <div class="mcteams">${m.home}<span class="vs">vs</span>${m.away}</div>
+      </div>
+      <div class="mcr">
+        <div style="text-align:center;min-width:60px">
+          ${scoreDisplay}
+          ${subInfo}
+        </div>
+        <div class="tbadge ${tbCls}">${tbTxt}</div>
+        <div class="arr">▼</div>
+      </div>
+    </div>
+    <div class="qodds">
+      <button class="qo ${s1}" onclick="event.stopPropagation();addBet('1','${m.id}','${m.home} - ${m.away}','1 — ${m.home} Kazanır',${m.odd1})">
+        <div class="qol">1 · ${m.home}</div><div class="qov">${m.odd1.toFixed(2)}</div></button>
+      <button class="qo ${sX}" onclick="event.stopPropagation();addBet('X','${m.id}','${m.home} - ${m.away}','X — Beraberlik',${m.oddX})">
+        <div class="qol">X · Beraberlik</div><div class="qov">${m.oddX.toFixed(2)}</div></button>
+      <button class="qo ${s2}" onclick="event.stopPropagation();addBet('2','${m.id}','${m.home} - ${m.away}','2 — ${m.away} Kazanır',${m.odd2})">
+        <div class="qol">2 · ${m.away}</div><div class="qov">${m.odd2.toFixed(2)}</div></button>
+    </div>
+    <div class="mkts${exp?' o':''}" id="mkts-${m.id}">
+      <div class="mkts-inner">${mkHtml}</div>
+    </div>
+  </div>`;
+}
+
+function toggleM(id){
+  const prev=expM;
+  expM=expM===id?null:id;
+
+  function closePanel(panelId,cardId){
+    const el=document.getElementById('mkts-'+panelId);
+    const cd=document.getElementById('mc-'+cardId);
+    if(el){
+      if(el.style.height==='auto')el.style.height=el.scrollHeight+'px';
+      // reset stagger delays before collapsing
+      el.querySelectorAll('.ob').forEach(b=>{b.style.transitionDelay='0s';});
+      el.querySelector('.mkts-inner').style.transitionDelay='0s';
+      requestAnimationFrame(()=>{ el.style.height='0'; el.classList.remove('o'); });
+    }
+    if(cd)cd.classList.remove('exp');
+  }
+
+  // close previous if different
+  if(prev && prev!==id) closePanel(prev,prev);
+
+  if(expM){
+    const newCard=document.getElementById('mc-'+expM);
+    const newEl=document.getElementById('mkts-'+expM);
+    if(!newEl||!newCard)return;
+
+    newCard.classList.add('exp');
+    // reset inner for re-entry
+    const inner=newEl.querySelector('.mkts-inner');
+    if(inner){inner.style.transitionDelay='';inner.style.opacity='';inner.style.transform='';}
+
+    // measure real height
+    newEl.style.visibility='hidden';newEl.style.height='auto';
+    const h=newEl.scrollHeight;
+    newEl.style.height='0';newEl.style.visibility='';
+    newEl.classList.add('o');
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        newEl.style.height=h+'px';
+        newEl.addEventListener('transitionend',function handler(e){
+          if(e.propertyName==='height'&&newEl.classList.contains('o')){
+            newEl.style.height='auto';newEl.removeEventListener('transitionend',handler);
+          }
+        });
+        // stagger each .ob — gentle 22ms between each
+        const obs=newEl.querySelectorAll('.ob');
+        obs.forEach((b,i)=>{ b.style.transitionDelay=`${0.08+i*0.022}s`; });
+      });
+    });
+    setTimeout(()=>{ newCard.scrollIntoView({behavior:'smooth',block:'nearest'}); },100);
+  } else {
+    // toggling same card off
+    closePanel(prev,prev);
+  }
+}
+
+// BET SLIP
+function addBet(oid,mid,mname,lbl,odd){
+  const k=oid+'_'+mid;
+  if(slip[k]){delete slip[k];}else{slip[k]={mid,mname,lbl,odd};}
+  renderSlip();
+  updateSelections(mid);
+}
+
+function updateSelections(mid){
+  const card=document.getElementById('mc-'+mid);
+  if(!card)return;
+  const qbtns=card.querySelectorAll('.qo');
+  ['1_','X_','2_'].forEach((pre,i)=>{ if(qbtns[i]) qbtns[i].classList.toggle('s',!!slip[pre+mid]); });
+  card.querySelectorAll('.ob').forEach(btn=>{
+    const oc=btn.getAttribute('onclick')||'';
+    const m=oc.match(/addBet\('([^']+)','([^']+)'/);
+    if(m) btn.classList.toggle('s',!!slip[m[1]+'_'+m[2]]);
+  });
+}
+
+function renderSlip(){
+  const items=Object.entries(slip);
+  document.getElementById('scnt').textContent=items.length;
+  const list=document.getElementById('slist');
+  const sec=document.getElementById('ssec');
+  if(!items.length){
+    list.innerHTML='<div class="empty">Maçlardan bahis seçerek<br>kupon oluşturun</div>';
+    sec.style.display='none';return;
+  }
+  list.innerHTML=items.map(([k,s])=>`<div class="si">
+    <div class="sim">${s.mname}</div>
+    <div class="sis">${s.lbl}</div>
+    <div class="sir"><span class="sio">${s.odd.toFixed(2)}</span><button class="del" onclick="delB('${k}')">×</button></div>
+  </div>`).join('');
+  const tot=items.reduce((a,[,s])=>a*s.odd,1);
+  document.getElementById('todd').textContent=tot.toFixed(2);
+  sec.style.display='block';calc();
+}
+
+function delB(k){
+  const mid=slip[k]?.mid;
+  delete slip[k];
+  renderSlip();
+  if(mid)updateSelections(mid);
+}
+function clearSlip(){
+  const mids=[...new Set(Object.values(slip).map(s=>s.mid))];
+  slip={};renderSlip();
+  mids.forEach(updateSelections);
+}
+function setS(v){document.getElementById('sinp').value=v;calc();}
+function calc(){
+  const s=parseFloat(document.getElementById('sinp').value)||0;
+  const o=parseFloat(document.getElementById('todd').textContent)||1;
+  document.getElementById('pval').textContent=Math.round(s*o).toLocaleString('tr-TR');
+}
+
+function placeBet(){
+  const items=Object.entries(slip);
+  if(!items.length||!CU)return;
+  const stake=parseFloat(document.getElementById('sinp').value)||0;
+  if(stake<=0||stake>CU.balance){alert(stake<=0?'Miktar girin!':'Yetersiz kredi!');return;}
+  const tot=items.reduce((a,[,s])=>a*s.odd,1);
+  const pot=Math.round(stake*tot);
+
+  // Kupon — her seçime matchId de kaydet, sonuç kontrolü için
+  const coupon={
+    id:Date.now(),
+    date:new Date().toLocaleString('tr-TR'),
+    selections:items.map(([k,s])=>({
+      key:k,           // "1_m1" gibi — hangi seçim
+      matchId:s.mid,   // maç id
+      match:s.mname,
+      label:s.lbl,
+      odd:s.odd,
+      betType:k.split('_')[0], // 1, X, 2
+    })),
+    totalOdd:parseFloat(tot.toFixed(2)),
+    stake, potential:pot,
+    status:'pending',
+    expiresAt:Date.now()+12*60*60*1000  // 12 saat sonra sil
+  };
+
+  const key='coupons_'+CU.username;
+  const arr=gs(key,[]);
+  arr.unshift(coupon);
+  ss(key,arr);
+
+  // Bakiyeyi düş
+  CU.balance-=stake;
+  ss('bal_'+CU.username,CU.balance);
+  document.getElementById('bdisp').textContent=CU.balance.toLocaleString('tr-TR');
+
+  const btn=document.querySelector('.pbtn');
+  btn.textContent='✓ Kupon Oynadı!';btn.style.background='#00c85a';
+  setTimeout(()=>{
+    btn.textContent='Kuponu Oyna →';btn.style.background='var(--accent)';
+    clearSlip();renderHistory();updProf();
+  },2200);
+}
+
+// ── KUPON SONUÇLANDIRMA ──────────────────────────────────────────
+// Maç bitince (status=FINISHED) kuponları kontrol et
+function settleCoupons(){
+  if(!CU) return;
+  const key='coupons_'+CU.username;
+  const arr=gs(key,[]);
+  if(!arr.length) return;
+
+  const now=Date.now();
+  let changed=false;
+
+  const settled=arr.filter(c=>{
+    // 12 saat geçmiş pending kuponları sil
+    if(c.status==='pending' && c.expiresAt && now>c.expiresAt){
+      changed=true;
+      return false; // listeden çıkar
+    }
+    return true;
+  }).map(c=>{
+    if(c.status!=='pending') return c;
+
+    // Her seçim için maçı bul
+    let allWon=true, anyLost=false;
+    for(const sel of c.selections){
+      const match=MATCHES.find(m=>m.id===sel.matchId);
+      if(!match) continue; // maç henüz yüklenmemiş
+      if(match.status!=='finished') continue; // bitmemiş
+
+      const result=getMatchResult(match);
+      if(result===null) continue; // skor yok
+
+      const won=checkBet(sel.betType, result);
+      if(!won){ anyLost=true; allWon=false; break; }
+    }
+
+    // Eğer tüm maçlar bittiyse sonuçlandır
+    const allFinished=c.selections.every(sel=>{
+      const m=MATCHES.find(x=>x.id===sel.matchId);
+      return m && m.status==='finished';
+    });
+
+    if(!allFinished) return c; // daha bekle
+
+    changed=true;
+    if(anyLost){
+      return {...c, status:'lost'};
+    }
+    if(allWon){
+      // Kazandı — bakiyeye ekle
+      CU.balance+=c.potential;
+      ss('bal_'+CU.username,CU.balance);
+      document.getElementById('bdisp').textContent=CU.balance.toLocaleString('tr-TR');
+      showWinNotification(c.potential);
+      return {...c, status:'won'};
+    }
+    return c;
+  });
+
+  if(changed){
+    ss(key,settled);
+    renderHistory();
+    rendCoupPage();
+    updProf();
+  }
+}
+
+function getMatchResult(match){
+  if(match.scoreHome==null||match.scoreAway==null) return null;
+  if(match.scoreHome>match.scoreAway) return '1';
+  if(match.scoreHome<match.scoreAway) return '2';
+  return 'X';
+}
+
+function checkBet(betType, result){
+  if(betType==='1') return result==='1';
+  if(betType==='2') return result==='2';
+  if(betType==='X') return result==='X';
+  // Çifte şans
+  if(betType==='cs1X') return result==='1'||result==='X';
+  if(betType==='csX2') return result==='X'||result==='2';
+  if(betType==='cs12') return result==='1'||result==='2';
+  return false; // diğer bahis tipleri (alt/üst vb.) şimdilik pending kalır
+}
+
+function showWinNotification(amount){
+  const n=document.createElement('div');
+  n.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;background:#00E676;color:#000;padding:14px 20px;border-radius:10px;font-weight:500;font-size:14px;animation:slideUp .3s ease';
+  n.textContent='🎉 Kazandın! +₺'+amount.toLocaleString('tr-TR')+' bakiyene eklendi';
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(),4000);
+}
+
+// ── HISTORY ────────────────────────────────────────────────────
+function renderHistory(){
+  if(!CU)return;
+  const arr=gs('coupons_'+CU.username,[]);
+  const el=document.getElementById('hlist');
+  el.innerHTML=arr.length?arr.slice(0,15).map(couponHtml).join(''):'<div class="empty">Henüz kupon yok.</div>';
+}
+
+function rendCoupPage(){
+  if(!CU)return;
+  const arr=gs('coupons_'+CU.username,[]);
+  const el=document.getElementById('cplist');
+  el.innerHTML=arr.length?arr.map(couponHtml).join(''):'<div class="empty">Henüz kupon oynanmadı.</div>';
+}
+
+function couponHtml(c){
+  const sc=c.status==='won'?'sw':c.status==='lost'?'sl2':'sp';
+  const st=c.status==='won'?'🏆 Kazandı':c.status==='lost'?'✗ Kaybetti':'⏳ Bekliyor';
+  const pot=c.status==='won'
+    ? `<span style="font-size:13px;font-weight:500;color:var(--win)">+₺${c.potential.toLocaleString('tr-TR')}</span>`
+    : c.status==='lost'
+    ? `<span style="font-size:13px;font-weight:500;color:var(--lose)">-₺${c.stake.toLocaleString('tr-TR')}</span>`
+    : `<span style="font-size:13px;font-weight:500;color:var(--info)">₺${c.potential.toLocaleString('tr-TR')}</span>`;
+  return `<div class="ci">
+    <div class="cih"><span class="cid">${c.date}</span><span class="cis ${sc}">${st}</span></div>
+    ${c.selections.map(s=>`<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--muted)">${s.match} · <span style="color:var(--text)">${s.label}</span> · <span style="color:var(--accent)">${s.odd.toFixed(2)}</span></div>`).join('')}
+    <div class="cif">
+      <span style="font-size:11px;color:var(--muted)">₺${c.stake.toLocaleString('tr-TR')} · Oran: ${c.totalOdd.toFixed(2)}</span>
+      ${pot}
+    </div>
+  </div>`;
+}
+
+// ── PROFILE ────────────────────────────────────────────────────
+function updProf(){
+  if(!CU)return;
+  document.getElementById('pun').textContent=CU.username;
+  document.getElementById('prl').textContent=CU.role==='admin'?'👑 Admin':'Kullanıcı';
+  document.getElementById('pbal').textContent='₺'+CU.balance.toLocaleString('tr-TR');
+  const arr=gs('coupons_'+CU.username,[]);
+  document.getElementById('ptot').textContent=arr.length;
+  document.getElementById('pwon').textContent=arr.filter(c=>c.status==='won').length;
+}
+</script>
+</body>
+</html>
